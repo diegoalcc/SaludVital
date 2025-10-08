@@ -1,0 +1,13 @@
+graph TD
+    A[Cliente/Frontend] --> B[API FastAPI]
+    B --> C[Gestor de Citas]
+    B --> D[Historial de Citas]
+    B --> E[Resultados Médicos]
+    B --> F[Alertas de Salud]
+    C --> G[Datos de Citas]
+    D --> H[Datos de Diagnósticos]
+    E --> I[Datos de Resultados]
+    F --> J[Lógica de Alertas]
+    G --> K[(Base de Datos)]
+    H --> K
+    I --> K

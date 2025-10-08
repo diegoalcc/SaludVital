@@ -1,0 +1,23 @@
+# Especifica la versión de Docker Compose a utilizar
+version: "3.9"
+
+# Define los servicios que componen la aplicación
+services:
+  # Servicio principal de la aplicación VitalApp
+  vitalapp:
+    # Especifica la imagen Docker a utilizar desde Docker Hub
+    image: sebastianalzateandica/devops_saludvital:latest
+    # Nombre personalizado para el contenedor
+    container_name: devops_saludvital
+    # Política de reinicio: el contenedor se reiniciará siempre excepto cuando se detenga manualmente
+    restart: unless-stopped
+    # Directorio de trabajo dentro del contenedor
+    working_dir: /app
+    # Exponer puertos
+    ports:
+      - "10000:10000"
+    # Variables de entorno
+    environment:
+      - frontDesplegado=*
+    # Comando para ejecutar la aplicación
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "10000"]

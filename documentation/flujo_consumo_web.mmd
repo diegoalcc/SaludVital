@@ -1,0 +1,9 @@
+graph TD
+    A[Usuario] --> B[Frontend Web]
+    B --> C{Variable de Entorno<br>frontDesplegado}
+    C -->|Url correcta y Configurada| D[API Salud Vital]
+    C -->|Url No Configurada| E[Error de Conexión]
+    D --> F[Validar CORS]
+    F --> G[Procesar Solicitud]
+    G --> H[Retornar Respuesta]
+    H --> B

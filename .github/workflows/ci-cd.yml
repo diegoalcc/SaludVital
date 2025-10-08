@@ -1,0 +1,100 @@
+# Nombre del flujo de trabajo de GitHub Actions
+name: CI/CD VitalApp
+
+# Define cuándo se ejecutará el flujo de trabajo
+on:
+  push:
+    branches: [ main ]  # Se ejecuta cuando hay un push a la rama main
+  pull_request:
+    branches: [ main ]  # Se ejecuta cuando hay un pull request a la rama main
+
+# Define los trabajos que se ejecutarán
+jobs:
+  # Trabajo de pruebas
+  test:
+    runs-on: ubuntu-latest  # Se ejecuta en la última versión de Ubuntu
+    steps:
+      # Paso 1: Obtener el código del repositorio
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      # Paso 2: Configurar el entorno Python
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'  # Usa Python 3.10
+
+      # Paso 3: Instalar las dependencias necesarias
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Paso 4: Ejecutar las pruebas
+      - name: Ejecutar pruebas
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)  # Añade el directorio actual al PYTHONPATH
+          pytest tests/  # Ejecuta las pruebas en el directorio tests/
+
+  # Trabajo de Docker
+  docker:
+    needs: test  # Este trabajo se ejecuta solo si el trabajo 'test' es exitoso
+    runs-on: ubuntu-latest
+    steps:
+      # Paso 1: Obtener el código
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      # Paso 2: Iniciar sesión en Docker Hub
+      - name: Login en Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      # Paso 3: Construir la imagen Docker
+      - name: Construir imagen Docker
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/devops_saludvital:latest .
+
+      # Paso 4: Publicar la imagen en Docker Hub
+      - name: Subir imagen a Docker Hub
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/devops_saludvital:latest
+
+  # Trabajo de despliegue local
+  deploy:
+    needs: docker  # Este trabajo se ejecuta solo si el trabajo 'docker' es exitoso
+    runs-on: ubuntu-latest
+    steps:
+      # Paso 1: Obtener el código
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      # Paso 2: Desplegar la aplicación usando docker-compose
+      - name: Desplegar aplicación
+        run: |
+          echo "Desplegando aplicación con docker-compose"
+          docker-compose up -d
+
+  # Trabajo de despliegue en AWS
+  deploy-aws:
+    needs: docker  # Este trabajo se ejecuta solo si el trabajo 'docker' es exitoso
+    runs-on: ubuntu-latest
+    steps:
+      # Paso 1: Configurar las credenciales de AWS
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Paso 2: Desplegar en instancia EC2 mediante SSH
+      - name: Deploy to AWS EC2
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.AWS_EC2_INSTANCE_IP }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd DevOps_SaludVital
+            git pull origin main
+            docker-compose down
+            docker-compose pull
+            docker-compose up -d

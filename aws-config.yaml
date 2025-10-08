@@ -1,0 +1,69 @@
+# Configuración de despliegue en AWS para Salud Vital
+
+# Detalles de la instancia EC2
+ec2:
+  instance_id: i-xxxxxxxxx
+  region: us-east-1
+  availability_zone: us-east-1a
+  instance_type: t2.micro
+  ami: ami-0xxxxxxxxx  # Ubuntu 20.04 LTS
+  key_pair: salud-vital-key
+  security_groups:
+    - salud-vital-sg
+
+# Configuración de red
+network:
+  vpc_id: vpc-xxxxxxxxx
+  subnet_id: subnet-xxxxxxxxx
+  public_ip: true
+
+# Grupo de seguridad
+security_group:
+  name: salud-vital-sg
+  description: Security group for Salud Vital application
+  rules:
+    - type: ingress
+      protocol: tcp
+      port: 22
+      source: 0.0.0.0/0
+      description: SSH access
+    - type: ingress
+      protocol: tcp
+      port: 10000
+      source: 0.0.0.0/0
+      description: Application access
+    - type: egress
+      protocol: all
+      port: all
+      destination: 0.0.0.0/0
+      description: All outbound traffic
+
+# Configuración de Docker
+docker:
+  image: sebastianalzateandica/devops_saludvital:latest
+  container_port: 10000
+  host_port: 10000
+
+# Variables de entorno
+environment:
+  frontDesplegado: "*"
+
+# Comandos de despliegue
+deployment:
+  steps:
+    - name: Update system packages
+      command: sudo apt update && sudo apt upgrade -y
+    - name: Install Docker
+      command: sudo apt install docker.io -y
+    - name: Install Docker Compose
+      command: sudo apt install docker-compose -y
+    - name: Start Docker service
+      command: sudo systemctl start docker && sudo systemctl enable docker
+    - name: Add user to docker group
+      command: sudo usermod -aG docker ubuntu
+    - name: Clone repository
+      command: git clone https://github.com/sebastianalzateandica/DevOps_SaludVital.git
+    - name: Pull latest Docker image
+      command: docker pull sebastianalzateandica/devops_saludvital:latest
+    - name: Start application
+      command: cd DevOps_SaludVital && docker-compose up -d

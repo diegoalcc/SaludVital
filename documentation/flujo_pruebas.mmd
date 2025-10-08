@@ -1,0 +1,10 @@
+graph TD
+    A[GitHub Actions] --> B[Clonar Repositorio]
+    B --> C[Configurar Python 3.10]
+    C --> D[Instalar Dependencias]
+    D --> E[Ejecutar Pruebas Unitarias]
+    E --> F{Pruebas Exitosas?}
+    F -->|Sí| G[Construir Imagen Docker]
+    F -->|No| H[Reportar Fallo]
+    G --> I[Publicar en Docker Hub]
+    I --> J[Despliegue Automático]
