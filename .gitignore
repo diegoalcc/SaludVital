@@ -1,6 +1,18 @@
+# Llaves privadas AWS y otros formatos
+*.pem
+*.key
+*.private
+
+# Archivos de entorno
+.env
+
+# Directorios y archivos temporales
 __pycache__/
 *.pyc
-.env
-.vscode/
 *.log
+.DS_Store
+
+# Configuraciones específicas
+.vscode/
 docker-compose.override.yml
+
